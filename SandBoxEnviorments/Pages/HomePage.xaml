@@ -1,0 +1,87 @@
+﻿<Page x:Class="SandBoxEnviorments.HomePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:SandBoxEnviorments"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="HomePage">
+    <Page.Resources>
+        <DataTemplate x:Key="SandboxTemplate">
+            <Border
+                BorderBrush="{Binding ColorOfSandbox}"
+                CornerRadius="2" BorderThickness="3" Margin="2" Width="350">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock  FontWeight="DemiBold" Margin="3" Text="Sandbox " FontSize="25" />
+                        <TextBlock Text="{Binding SandboxNumber}" FontWeight="DemiBold"
+                                   FontSize="25"/>
+                        <TextBlock  FontWeight="DemiBold" Margin="10" Text="    " FontSize="14" />
+                        <TextBlock  FontWeight="Bold" Margin="10" Text="Deployable: " FontSize="14" />
+                        <TextBlock Margin="10" Text="{Binding Deployable}" FontWeight="DemiBold"
+                                   FontSize="14"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock  FontWeight="Bold" Margin="3" Text="User Story: " FontSize="14" />
+                        <TextBlock Text="{Binding UserStory}" FontWeight="DemiBold"
+                                   FontSize="14"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="3" FontWeight="Bold" Text="Status: " FontSize="14" />
+                        <TextBlock Text="{Binding Status}" FontWeight="DemiBold"
+                                   FontSize="14"/>
+                        <TextBlock Margin="2" FontWeight="Bold" Text=" Developer: " FontSize="14" />
+                        <TextBlock Text="{Binding Developer}" FontWeight="DemiBold"
+                                   FontSize="14"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </Page.Resources>
+    <Grid Background="SteelBlue" Margin="3">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock x:Name="noSandboxesMessage" Margin="9" Grid.ColumnSpan="2" Visibility="Hidden" Text="There are no sandboxes in the system.&#x0a; Please click Add Sandbox." FontSize="20" FontWeight="DemiBold"/>
+        <ListBox x:Name="SandBox"
+                 Grid.RowSpan="3"
+                 BorderThickness="2"
+                 ItemTemplate="{StaticResource SandboxTemplate}"
+                 BorderBrush="SteelBlue" Height="Auto" SelectionChanged="SandBox_SelectionChanged" Margin="10,0,129,0" Grid.ColumnSpan="2"/>
+        <Button Content="Deploy to a Sandbox" 
+                FontSize="18" 
+                FontWeight="Bold"
+                HorizontalAlignment="Left" 
+                Margin="211,10,0,0" 
+                VerticalAlignment="Top" 
+                Width="230" Height="100" 
+                Grid.ColumnSpan="2" 
+                BorderBrush="#FF2A87C7" FontFamily="MS Reference Sans Serif" Click="Deploy_Sanbox_Button_Click" Grid.Column="1"/>
+        <Button Content="Sign off on Sandbox" 
+            FontSize="18" 
+            FontWeight="Bold"
+            HorizontalAlignment="Left" 
+            Margin="211,10,0,0" 
+            VerticalAlignment="Top" 
+            Width="230" Height="100" 
+            Grid.ColumnSpan="2" 
+            BorderBrush="#FF2A87C7" FontFamily="MS Reference Sans Serif" Click="Sign_Off_Button_Click" Grid.Column="1" Grid.Row="1"/>
+        <Button Content="Add a Sandbox" 
+            FontSize="18" 
+            FontWeight="Bold"
+            HorizontalAlignment="Left" 
+            Margin="211,10,0,0" 
+            VerticalAlignment="Top" 
+            Width="230" Height="100" 
+            Grid.ColumnSpan="2" 
+            BorderBrush="#FF2A87C7" FontFamily="MS Reference Sans Serif" Click="Add_Sandbox_Button_Click" Grid.Column="1" Grid.Row="2"/>
+    </Grid>
+</Page>
