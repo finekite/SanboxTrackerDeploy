@@ -2,7 +2,9 @@
 
 using OfficeOpenXml;
 using SandBoxEnviorments.Enums;
+using System;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Windows.Media;
@@ -11,18 +13,16 @@ namespace SandBoxEnviorments.Repositories
 {
     public class ExcelRepository : IRepository
     {
-        private ObservableCollection<Sandbox> sandboxes;
+        private const string SheetName = "Sheet1";
+        private readonly string FileName = ConfigurationManager.AppSettings["FileName"];
+        private readonly bool isProduction = ConfigurationManager.AppSettings["isProduction"] == "1";
+        private string ProjectDirectory => ConfigurationManager.AppSettings[isProduction ? "FileLocation" : "DevFileLocation"];
 
         public ObservableCollection<Sandbox> GetSandboxesInfo()
         {
             var fileInfo = GetFile();
 
-            if (!fileInfo.Exists)
-            {
-                AddNewSandboxFile(fileInfo);
-            }
-
-            ReadSandboxInfo(fileInfo);
+            var sandboxes = ReadSandboxInfo(fileInfo);
 
             return sandboxes;
         }
@@ -30,123 +30,112 @@ namespace SandBoxEnviorments.Repositories
         public void UpdateSandboxInfo(Sandbox sandbox)
         {
             sandbox.Deployable = false;
+
             var fileInfo = GetFile();
-            WriteSandboxInfo(sandbox, fileInfo);
+
+            Update(sandbox, fileInfo);
         }
 
+       
 
         public void AddNewSandboxFile(FileInfo fileInfo)
         {
-            byte firstRow = 1;
-            using (var excelPackage = new ExcelPackage(fileInfo))
-            {
-                ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.Add("Sheet1");
-
-                foreach (var item in SandboxColumnsEnums.AllSandboxColumns)
-                {
-                    worksheet.Cells[firstRow, item.id].Value = item.ObjectName;
-                }
-
-                excelPackage.Save();
-            }
-        }
+            CreateXLSFile(fileInfo);
+        }        
 
         public bool SignOffOnSanbox(Sandbox sandbox)
         {
+            sandbox = ClearUser(sandbox);
+
             var fileInfo = GetFile();
-            using (ExcelPackage excelPackage = new ExcelPackage(fileInfo))
-            {
-                ExcelWorkbook excelWorkBook = excelPackage.Workbook;
-                ExcelWorksheet excelWorksheet = excelWorkBook.Worksheets["Sheet1"];
-                int rowNum = excelWorksheet.Row(int.Parse(sandbox.SandboxNumber)).Row + 1;
-                int deployableColumn = GetColumn(excelWorksheet, "Deployable");
-                int developercolumn = GetColumn(excelWorksheet, "Developer");
-                excelWorksheet.Cells[rowNum, deployableColumn].Value = true;
-                excelWorksheet.Cells[rowNum, developercolumn].Value = null;
-                excelPackage.Save();
-            }
+
+            Update(sandbox, fileInfo);
+
             return true;
         }
 
-        private void WriteSandboxInfo(Sandbox sandbox, FileInfo fileInfo)
+        private Sandbox ClearUser(Sandbox sandbox)
         {
-            if (fileInfo.Exists)
-            {
-                using (ExcelPackage excelPackage = new ExcelPackage(fileInfo))
-                {
-                    ExcelWorkbook excelWorkBook = excelPackage.Workbook;
-                    ExcelWorksheet excelWorksheet = excelWorkBook.Worksheets["Sheet1"];
-                    int rowNum = excelWorksheet.Row(int.Parse(sandbox.SandboxNumber)).Row + 1;
-                    excelWorksheet.Cells[rowNum, 1].Value = sandbox.SandboxNumber;
-                    excelWorksheet.Cells[rowNum, 2].Value = sandbox.Developer;
-                    excelWorksheet.Cells[rowNum, 3].Value = sandbox.DateLastDeployed;
-                    excelWorksheet.Cells[rowNum, 4].Value = sandbox.Status;
-                    excelWorksheet.Cells[rowNum, 5].Value = sandbox.UserStory;
-                    excelWorksheet.Cells[rowNum, 6].Value = sandbox.Deployable;
+            sandbox.Deployable = true;
+            sandbox.Developer = null;
+            sandbox.Status = null;
+            sandbox.UserStory = null;
+            return sandbox;
+        }
 
-                    excelPackage.Save();
-                }
+
+        private static void Save(ExcelPackage package)
+        {
+            try
+            {
+                package.Save();
+            }
+            catch (InvalidOperationException ex)
+            {
+
             }
         }
 
-        private FileInfo GetFile()
+        private static void Update(Sandbox sandbox, FileInfo fileInfo)
         {
-            var fileName = "SandboxInfo.xlsx";
-            string projectDirectory = @"O:\TKO\"; //Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName; /* */
-            return new FileInfo(projectDirectory + fileName);
+            using (ExcelPackage package = new ExcelPackage(fileInfo))
+            {
+                ExcelWorkbook book = package.Workbook;
+                ExcelWorksheet sheet = book.Worksheets[SheetName];
+
+                int rowNum = GetRowNumberFromSandBox(sandbox, sheet);
+
+                sheet.Cells[rowNum, 1].Value = sandbox.SandboxNumber;
+                sheet.Cells[rowNum, 2].Value = sandbox.Developer;
+                sheet.Cells[rowNum, 3].Value = sandbox.DateLastDeployed;
+                sheet.Cells[rowNum, 4].Value = sandbox.Status;
+                sheet.Cells[rowNum, 5].Value = sandbox.UserStory;
+                sheet.Cells[rowNum, 6].Value = sandbox.Deployable;
+
+                Save(package);
+            }
         }
 
-        private void ReadSandboxInfo(FileInfo fileInfo)
+        private ObservableCollection<Sandbox> ReadSandboxInfo(FileInfo fileInfo)
         {
-            if (fileInfo.Exists)
+            ObservableCollection<Sandbox> sandboxes = new ObservableCollection<Sandbox>();
+
+            using (ExcelPackage excelPackage = new ExcelPackage(fileInfo))
             {
-                using (ExcelPackage excelPackage = new ExcelPackage(fileInfo))
+                ExcelWorkbook book = excelPackage.Workbook;
+                ExcelWorksheet sheet = book.Worksheets[SheetName];  
+
+                for (int row = sheet.Dimension.Start.Row + 1; row <= sheet.Dimension.End.Row; row++)
                 {
-                    ExcelWorkbook excelWorkBook = excelPackage.Workbook;
-                    ExcelWorksheet excelWorksheet = excelWorkBook.Worksheets["Sheet1"];
-                    sandboxes = new ObservableCollection<Sandbox>();
-                    var sandBox = new Sandbox();
-                    for (int row = excelWorksheet.Dimension.Start.Row + 1;
-                            row <= excelWorksheet.Dimension.End.Row;
-                         row++)
+                    var tempSandbox = new Sandbox();
+
+                    for (int column = sheet.Dimension.Start.Column; column <= sheet.Dimension.End.Column; column++)
                     {
-                        for (int column = excelWorksheet.Dimension.Start.Column;
-                                 column <= excelWorksheet.Dimension.End.Column;
-                                 column++)
-                        {
-                            string cellValue = excelWorksheet.Cells[row, column].Text;
-                            MapCellValueToSandBox(cellValue, sandBox, column);
-                        }
+                        string cellValue = sheet.Cells[row, column].Text;
 
-                        sandBox.ColorOfSandbox = DetermineSandBoxColor(sandBox.Deployable);
-                        sandBox.LocalPathToSandBox = SandboxPath.TryGetSandbox(int.Parse(sandBox.SandboxNumber))?.SandboxfilePath ?? null;
-                        sandboxes.Add(sandBox);
-                        sandBox = new Sandbox();
+                        MapCellValueToSandBox(cellValue, tempSandbox, column);
                     }
+
+                    tempSandbox.ColorOfSandbox = DetermineSandBoxColor(tempSandbox.Deployable);
+
+                    tempSandbox.LocalPathToSandBox = SandboxPath.TryGetSandbox(int.Parse(tempSandbox.SandboxNumber))?.SandboxfilePath ?? null;
+
+                    sandboxes.Add(tempSandbox);
                 }
             }
-        }
-
-        private SolidColorBrush DetermineSandBoxColor(bool deployable)
-        {
-            if (deployable)
-            {
-                return new SolidColorBrush(Colors.Green);
-            }
-            else
-            {
-                return new SolidColorBrush(Colors.Red);
-            }
+            return sandboxes;
         }
 
         private void MapCellValueToSandBox(string cellValue, Sandbox sandbox, int column)
         {
             var columnName = GetSanboxColumnName(column);
+
             var sandboxPropertyMatchingColumnName = sandbox.GetType().GetProperty(columnName.ObjectName);
 
             if (sandboxPropertyMatchingColumnName.Name == SandboxColumnsEnums.DEPLOYABLE.ObjectName)
             {
                 bool deployable = cellValue == "1" ? true : false;
+
                 sandboxPropertyMatchingColumnName.SetValue(sandbox, deployable);
             }
             else
@@ -155,14 +144,59 @@ namespace SandBoxEnviorments.Repositories
             }
         }
 
-        private SandboxColumnsEnums GetSanboxColumnName(int column)
+
+        private static int GetRowNumberFromSandBox(Sandbox sandbox, ExcelWorksheet sheet) => sheet.Row(int.Parse(sandbox.SandboxNumber)).Row + 1;
+
+        private SandboxColumnsEnums GetSanboxColumnName(int column) => SandboxColumnsEnums.AllSandboxColumns.Where(x => x.id == column).FirstOrDefault();
+
+        private int GetColumn(ExcelWorksheet sheet, string columnName) => sheet.Cells["1:1"].FirstOrDefault(x => x.Value.ToString() == columnName).Start.Column;
+
+        private SolidColorBrush DetermineSandBoxColor(bool deployable) => deployable ? new SolidColorBrush(Colors.Green) : new SolidColorBrush(Colors.Red);
+
+        private FileInfo GetFile()
         {
-            return SandboxColumnsEnums.AllSandboxColumns.Where(x => x.id == column).FirstOrDefault();
+            string path = $"{ProjectDirectory}{FileName}";
+
+            FileInfo fileInfo = new FileInfo(path);
+
+            if (!fileInfo.Exists)
+            {
+                Directory.CreateDirectory(ProjectDirectory);
+
+                fileInfo = new FileInfo(path);
+
+                if (!fileInfo.Exists)
+                {
+                    CreateXLSFile(fileInfo);
+
+                    fileInfo = new FileInfo(path);
+
+                    if (!fileInfo.Exists)
+                    {
+                        throw new Exception("Unable to locate or Create File");
+                    }
+                }
+            }
+            return fileInfo;
         }
 
-        private int GetColumn(ExcelWorksheet excelWorksheet, string columnName)
+        private static void CreateXLSFile(FileInfo fileInfo)
         {
-            return excelWorksheet.Cells["1:1"].FirstOrDefault(x => x.Value.ToString() == columnName).Start.Column;
+            byte firstRow = 1;
+
+            using (var package = new ExcelPackage(fileInfo))
+            {
+                ExcelWorkbook book = package.Workbook;
+
+                ExcelWorksheet worksheet = book.Worksheets.Add(SheetName);
+
+                foreach (var columnEnum in SandboxColumnsEnums.AllSandboxColumns)
+                {
+                    worksheet.Cells[firstRow, columnEnum.id].Value = columnEnum.ObjectName;
+                }
+
+                Save(package);
+            }
         }
     }
 }
