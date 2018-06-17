@@ -13,10 +13,13 @@ namespace SandBoxEnviorments.Repositories
 {
     public class ExcelRepository : IRepository
     {
-        private const string SheetName = "Sheet1";
-        private readonly string FileName = ConfigurationManager.AppSettings["FileName"];
+        private const string sheetName = "Sheet1";
+
+        private readonly string fileName = ConfigurationManager.AppSettings["FileName"];
+
         private readonly bool isProduction = ConfigurationManager.AppSettings["isProduction"] == "1";
-        private string ProjectDirectory => ConfigurationManager.AppSettings[isProduction ? "FileLocation" : "DevFileLocation"];
+
+        private string projectDirectory => ConfigurationManager.AppSettings[isProduction ? "FileLocation" : "DevFileLocation"];
 
         public ObservableCollection<Sandbox> GetSandboxesInfo()
         {
@@ -36,12 +39,12 @@ namespace SandBoxEnviorments.Repositories
             Update(sandbox, fileInfo);
         }
 
-       
+
 
         public void AddNewSandboxFile(FileInfo fileInfo)
         {
             CreateXLSFile(fileInfo);
-        }        
+        }
 
         public bool SignOffOnSanbox(Sandbox sandbox)
         {
@@ -81,7 +84,7 @@ namespace SandBoxEnviorments.Repositories
             using (ExcelPackage package = new ExcelPackage(fileInfo))
             {
                 ExcelWorkbook book = package.Workbook;
-                ExcelWorksheet sheet = book.Worksheets[SheetName];
+                ExcelWorksheet sheet = book.Worksheets[sheetName];
 
                 int rowNum = GetRowNumberFromSandBox(sandbox, sheet);
 
@@ -103,7 +106,7 @@ namespace SandBoxEnviorments.Repositories
             using (ExcelPackage excelPackage = new ExcelPackage(fileInfo))
             {
                 ExcelWorkbook book = excelPackage.Workbook;
-                ExcelWorksheet sheet = book.Worksheets[SheetName];  
+                ExcelWorksheet sheet = book.Worksheets[sheetName];
 
                 for (int row = sheet.Dimension.Start.Row + 1; row <= sheet.Dimension.End.Row; row++)
                 {
@@ -155,13 +158,13 @@ namespace SandBoxEnviorments.Repositories
 
         private FileInfo GetFile()
         {
-            string path = $"{ProjectDirectory}{FileName}";
+            string path = $"{projectDirectory}{fileName}";
 
             FileInfo fileInfo = new FileInfo(path);
 
             if (!fileInfo.Exists)
             {
-                Directory.CreateDirectory(ProjectDirectory);
+                Directory.CreateDirectory(projectDirectory);
 
                 fileInfo = new FileInfo(path);
 
@@ -188,7 +191,7 @@ namespace SandBoxEnviorments.Repositories
             {
                 ExcelWorkbook book = package.Workbook;
 
-                ExcelWorksheet worksheet = book.Worksheets.Add(SheetName);
+                ExcelWorksheet worksheet = book.Worksheets.Add(sheetName);
 
                 foreach (var columnEnum in SandboxColumnsEnums.AllSandboxColumns)
                 {
