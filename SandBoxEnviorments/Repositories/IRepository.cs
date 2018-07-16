@@ -12,6 +12,6 @@ namespace SandBoxEnviorments.Repositories
 
         bool SignOffOnSanbox(Sandbox sandbox);
 
-        void AddNewSandboxFile(FileInfo fileInfo);
+        void AddNewSandboxFile();
     }
 }

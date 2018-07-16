@@ -113,13 +113,13 @@ namespace SandboxEnviorments.UnitTests.ServiceTests
         {
             // Arrange
             var fileInfo = new FileInfo("hello");
-            mockedExcelRepository.Setup(x => x.AddNewSandboxFile(fileInfo));
+            mockedExcelRepository.Setup(x => x.AddNewSandboxFile());
 
             // Act
             sandboxInfoExcelService.AddNewSandboxFile(fileInfo);
 
             // Assert
-            mockedExcelRepository.Verify(x => x.AddNewSandboxFile(fileInfo), Times.Once);
+            mockedExcelRepository.Verify(x => x.AddNewSandboxFile(), Times.Once);
         }
 
         [TestMethod]

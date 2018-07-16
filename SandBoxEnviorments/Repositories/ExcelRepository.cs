@@ -2,6 +2,7 @@
 
 using OfficeOpenXml;
 using SandBoxEnviorments.Enums;
+using SandBoxEnviorments.Files;
 using System;
 using System.Collections.ObjectModel;
 using System.Configuration;
@@ -15,15 +16,22 @@ namespace SandBoxEnviorments.Repositories
     {
         private const string sheetName = "Sheet1";
 
-        private readonly string fileName = ConfigurationManager.AppSettings["FileName"];
+        private IFileManager filemanager;
 
-        private readonly bool isProduction = ConfigurationManager.AppSettings["isProduction"] == "1";
+        public ExcelRepository(IFileManager filemanager)
+        {
+            this.filemanager = filemanager;
+        }
 
-        private string projectDirectory => ConfigurationManager.AppSettings[isProduction ? "FileLocation" : "DevFileLocation"];
 
         public ObservableCollection<Sandbox> GetSandboxesInfo()
         {
-            var fileInfo = GetFile();
+            var fileInfo = filemanager.GetFile();
+
+            if (!fileInfo.Exists)
+            {
+                AddNewSandboxFile();
+            }
 
             var sandboxes = ReadSandboxInfo(fileInfo);
 
@@ -34,23 +42,23 @@ namespace SandBoxEnviorments.Repositories
         {
             sandbox.Deployable = false;
 
-            var fileInfo = GetFile();
+            var fileInfo = filemanager.GetFile();
 
             Update(sandbox, fileInfo);
         }
 
 
 
-        public void AddNewSandboxFile(FileInfo fileInfo)
+        public void AddNewSandboxFile()
         {
-            CreateXLSFile(fileInfo);
+            filemanager.CreateFile();
         }
 
         public bool SignOffOnSanbox(Sandbox sandbox)
         {
             sandbox = ClearUser(sandbox);
 
-            var fileInfo = GetFile();
+            var fileInfo = filemanager.GetFile();
 
             Update(sandbox, fileInfo);
 
@@ -61,12 +69,10 @@ namespace SandBoxEnviorments.Repositories
         {
             sandbox.Deployable = true;
             sandbox.Developer = null;
-            sandbox.Status = null;
-            sandbox.UserStory = null;
             return sandbox;
         }
 
-        private static void Save(ExcelPackage package)
+        private void Save(ExcelPackage package)
         {
             try
             {
@@ -78,7 +84,7 @@ namespace SandBoxEnviorments.Repositories
             }
         }
 
-        private static void Update(Sandbox sandbox, FileInfo fileInfo)
+        private void Update(Sandbox sandbox, FileInfo fileInfo)
         {
             using (ExcelPackage package = new ExcelPackage(fileInfo))
             {
@@ -147,58 +153,12 @@ namespace SandBoxEnviorments.Repositories
         }
 
 
-        private static int GetRowNumberFromSandBox(Sandbox sandbox, ExcelWorksheet sheet) => sheet.Row(int.Parse(sandbox.SandboxNumber)).Row + 1;
+        private int GetRowNumberFromSandBox(Sandbox sandbox, ExcelWorksheet sheet) => sheet.Row(int.Parse(sandbox.SandboxNumber)).Row + 1;
 
         private SandboxColumnsEnums GetSanboxColumnName(int column) => SandboxColumnsEnums.AllSandboxColumns.Where(x => x.id == column).FirstOrDefault();
 
         private int GetColumn(ExcelWorksheet sheet, string columnName) => sheet.Cells["1:1"].FirstOrDefault(x => x.Value.ToString() == columnName).Start.Column;
 
-        private SolidColorBrush DetermineSandBoxColor(bool deployable) => deployable ? new SolidColorBrush(Colors.Green) : new SolidColorBrush(Colors.Red);
-
-        private FileInfo GetFile()
-        {
-            string path = $"{projectDirectory}{fileName}";
-
-            FileInfo fileInfo = new FileInfo(path);
-
-            if (!fileInfo.Exists)
-            {
-                Directory.CreateDirectory(projectDirectory);
-
-                fileInfo = new FileInfo(path);
-
-                if (!fileInfo.Exists)
-                {
-                    CreateXLSFile(fileInfo);
-
-                    fileInfo = new FileInfo(path);
-
-                    if (!fileInfo.Exists)
-                    {
-                        throw new Exception("Unable to locate or Create File");
-                    }
-                }
-            }
-            return fileInfo;
-        }
-
-        private static void CreateXLSFile(FileInfo fileInfo)
-        {
-            byte firstRow = 1;
-
-            using (var package = new ExcelPackage(fileInfo))
-            {
-                ExcelWorkbook book = package.Workbook;
-
-                ExcelWorksheet worksheet = book.Worksheets.Add(sheetName);
-
-                foreach (var columnEnum in SandboxColumnsEnums.AllSandboxColumns)
-                {
-                    worksheet.Cells[firstRow, columnEnum.id].Value = columnEnum.ObjectName;
-                }
-
-                Save(package);
-            }
-        }
+        private string DetermineSandBoxColor(bool deployable) => deployable ? "Green" : "Red";
     }
 }

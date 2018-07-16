@@ -36,7 +36,7 @@ namespace SandBoxEnviorments.Services
         {
             lock (thisLock)
             {
-                repository.AddNewSandboxFile(fileInfo);
+                repository.AddNewSandboxFile();
             }
         }
 

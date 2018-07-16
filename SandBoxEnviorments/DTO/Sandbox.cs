@@ -1,9 +1,11 @@
 ﻿
 using SandBoxEnviorments.Enums;
+using System;
 using System.Windows.Media;
 
 namespace SandBoxEnviorments
 {
+    [Serializable]
     public class Sandbox
     {
 
@@ -21,7 +23,7 @@ namespace SandBoxEnviorments
 
         public string BranchToDeploy { get; set; }
 
-        public SolidColorBrush ColorOfSandbox { get; set; }
+        public string ColorOfSandbox { get; set; }
 
         public string LocalPathToSandBox { get; set; }
 

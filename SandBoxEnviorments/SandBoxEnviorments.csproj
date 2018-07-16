@@ -39,6 +39,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -119,6 +120,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Files\ExcelFileManager.cs" />
+    <Compile Include="Files\SerializeFileManager.cs" />
+    <Compile Include="Files\IFileManager.cs" />
     <Compile Include="Pages\DeployPage.xaml.cs">
       <DependentUpon>DeployPage.xaml</DependentUpon>
     </Compile>
@@ -131,6 +135,7 @@
     <Compile Include="Repositories\ExcelRepository.cs" />
     <Compile Include="Repositories\IRepository.cs" />
     <Compile Include="DTO\Sandbox.cs" />
+    <Compile Include="Repositories\SerializeRepositoy.cs" />
     <Compile Include="Services\ExcelService.cs" />
     <Compile Include="Services\IDeployService.cs" />
     <Compile Include="Services\IService.cs" />
@@ -179,10 +184,13 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="SanboxesEnviormentClassDiagram.cd" />
     <None Include="SandBoxEnviorments_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.2">
@@ -196,5 +204,9 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="TFSMarkdown\TFSMarkdownPageTest.md" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
