@@ -1,4 +1,4 @@
-﻿using SandBoxEnviorments.Files;
+﻿using SandBoxEnviorments.FileManagement;
 using SandBoxEnviorments.Repositories;
 using SandBoxEnviorments.Services;
 using System;
@@ -28,8 +28,8 @@ namespace SandBoxEnviorments
         private void ConfigureContainer()
         {
             container = new UnityContainer();
-            container.RegisterType<IFileManager, ExcelFileManager>(new InjectionConstructor(GetConfiguration("ExcelFileManagerFileName"), GetConfiguration("ExcelFileManagerDirectoryName")));
-            container.RegisterType<IRepository, ExcelRepository>(new ContainerControlledLifetimeManager());
+            container.RegisterType<IFileManager, SerializeFileManager>(new InjectionConstructor(GetConfiguration("SerializeFileManagerFileName"), GetConfiguration("SerializeFileManagerDirectoryName")));
+            container.RegisterType<IRepository, SerializeRepositoy>(new ContainerControlledLifetimeManager());
             container.RegisterType<ISandboxInfoService, SandboxInfoExcelService>(new ContainerControlledLifetimeManager());
             container.RegisterType<IDeployService, VSCommandPromptDeployService>(new ContainerControlledLifetimeManager());
         }

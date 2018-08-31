@@ -1,4 +1,4 @@
-﻿using SandBoxEnviorments.Files;
+﻿using SandBoxEnviorments.FileManagement;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -61,7 +61,11 @@ namespace SandBoxEnviorments.Repositories
 
         public bool SignOffOnSanbox(Sandbox sandbox)
         {
-            throw new NotImplementedException();
+            sandbox.Developer = null;
+            sandbox.Deployable = true;
+            UpdateSandboxInfo(sandbox);
+
+            return true;
         }
 
         public void UpdateSandboxInfo(Sandbox sandbox)
@@ -75,29 +79,46 @@ namespace SandBoxEnviorments.Repositories
 
             var sandboxList = ReadSandboxInfoFromFile(fileInfo);
 
+            UpdateSandboxList(sandboxList, sandbox);
+
+            SerializeSandboxList(sandboxList, fileInfo);
+        }
+
+        private void SerializeSandboxList(ObservableCollection<Sandbox> sandboxList, FileInfo fileInfo)
+        {
+            var formatter = new BinaryFormatter();
+            using (Stream stream = fileInfo.OpenWrite())
+            {
+                formatter.Serialize(stream, sandboxList);
+            }
+        }
+
+        private void UpdateSandboxList(ObservableCollection<Sandbox> sandboxList, Sandbox sandbox)
+        {
             if (sandboxList != null)
             {
-                var sandboxToUpdate = sandboxList.Where(x => x.SandboxNumber == sandbox.SandboxNumber).FirstOrDefault();
+                // get the sandbox ur trying to update
+                int? sandboxElement = sandboxList.Select((sandboxToUpdate, index) => new { sandboxToUpdate, index })
+                          .Where(x => x.sandboxToUpdate.SandboxNumber == sandbox.SandboxNumber)
+                          .Select(sandboxIndex => (int?)sandboxIndex.index)
+                          .FirstOrDefault();
 
-                if (sandboxToUpdate != null)
+                // if sandbox exist update it if not add it to the list
+                if (sandboxElement.HasValue)
                 {
-                    sandboxToUpdate = sandbox;
+                    sandboxList.RemoveAt(sandboxElement.Value);
+                    sandboxList.Insert(sandboxElement.Value, sandbox);
                 }
                 else
                 {
                     sandboxList.Add(sandbox);
                 }
             }
+            // if sandboxList is null it means there are no sandboxes yet. Add the first one here
             else
             {
                 sandboxList = new ObservableCollection<Sandbox>();
                 sandboxList.Add(sandbox);
-            }
-
-            var formatter = new BinaryFormatter();
-            using (Stream stream = fileInfo.OpenWrite())
-            {
-                formatter.Serialize(stream, sandboxList);   
             }
         }
     }

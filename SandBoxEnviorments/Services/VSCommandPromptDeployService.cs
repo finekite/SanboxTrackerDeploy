@@ -10,9 +10,9 @@ namespace SandBoxEnviorments.Services
 
     public class VSCommandPromptDeployService : IDeployService
     {
-        [DllImport("kernel32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool AllocConsole();
+        //[DllImport("kernel32.dll")]
+        //[return: MarshalAs(UnmanagedType.Bool)]
+        //static extern bool AllocConsole();
 
         private readonly string microsoftVSToolsPath = @"Cd\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\Tools";
 
@@ -28,7 +28,7 @@ namespace SandBoxEnviorments.Services
                 ExecuteCommandPromptProcess(process, sandbox);
                 return true;
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 return false;
             }

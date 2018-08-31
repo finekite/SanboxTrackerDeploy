@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SandBoxEnviorments.Files
+namespace SandBoxEnviorments.FileManagement
 {
     public interface IFileManager
     {

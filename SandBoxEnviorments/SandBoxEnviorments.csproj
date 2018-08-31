@@ -120,9 +120,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Files\ExcelFileManager.cs" />
-    <Compile Include="Files\SerializeFileManager.cs" />
-    <Compile Include="Files\IFileManager.cs" />
+    <Compile Include="FileManagment\ExcelFileManager.cs" />
+    <Compile Include="FileManagment\SerializeFileManager.cs" />
+    <Compile Include="FileManagment\IFileManager.cs" />
     <Compile Include="Pages\DeployPage.xaml.cs">
       <DependentUpon>DeployPage.xaml</DependentUpon>
     </Compile>
@@ -138,7 +138,8 @@
     <Compile Include="Repositories\SerializeRepositoy.cs" />
     <Compile Include="Services\ExcelService.cs" />
     <Compile Include="Services\IDeployService.cs" />
-    <Compile Include="Services\IService.cs" />
+    <Compile Include="Services\ISandboxInfoService.cs" />
+    <Compile Include="Services\SerializeService.cs" />
     <Compile Include="Services\VSCommandPromptDeployService.cs" />
     <Page Include="Pages\DeployPage.xaml">
       <SubType>Designer</SubType>
